@@ -6,7 +6,7 @@ import (
   "fmt"
 )
 
-type OrderDB struct {
+type OrderTbl struct {
   gorm.Model
 	OrderID string `gorm:"primary_key"`
   AssetUUID string `json:"asset_uuid"`
@@ -28,7 +28,7 @@ func main() {
   // db.Create(&Product{Code: "L1212", Price: 1000})
 
   // Read
-  var product OrderDB
+  var product OrderTbl
   db.First(&product, 1) // find product with id 1
   fmt.Println(product)
   // db.First(&product, "code = ?", "L1212") // find product with code l1212

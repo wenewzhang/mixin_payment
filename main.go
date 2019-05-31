@@ -24,7 +24,7 @@ type Order struct {
   Amount string `json:"amount"`
   CallBack string `json:"call_back"`
 }
-type OrderDB struct {
+type OrderTbl struct {
   gorm.Model
 	OrderID string `gorm:"primary_key"`
   AssetUUID string `json:"asset_uuid"`
@@ -34,7 +34,7 @@ type OrderDB struct {
 
 func handler(w http.ResponseWriter, r *http.Request) {
   var order  Order
-  var orderDB OrderDB
+  var orderDB OrderTbl
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
   fmt.Println(order)
   if err != nil {
@@ -124,7 +124,7 @@ func main() {
     defer db.Close()
 
     // Migrate the schema
-    db.AutoMigrate(&OrderDB{})
+    db.AutoMigrate(&OrderTbl{})
 
 
     c := make(chan os.Signal, 1)
