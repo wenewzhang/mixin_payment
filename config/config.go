@@ -22,3 +22,6 @@ MdepjmjG/PyRnoq/qgECQQCmoIh+xR6vJZ8VRWgjSzmJUPrZFz8uWk6BoePFGrGV
 FIHlQELVfFxLB2Xo9zDXvDVRK5N5O1bCNMfXUuQsmstm
 -----END RSA PRIVATE KEY-----`
 )
+const (
+	SqlitePath = "./payment.db"
+)

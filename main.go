@@ -14,6 +14,8 @@ import (
     "github.com/gorilla/mux"
     "github.com/wenewzhang/mixin_payment/utils"
     "github.com/wenewzhang/mixin_payment/config"
+    "github.com/jinzhu/gorm"
+    _ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type Order struct {
@@ -22,7 +24,13 @@ type Order struct {
   Amount string `json:"amount"`
   CallBack string `json:"call_back"`
 }
-
+type OrderDB struct {
+  gorm.Model
+	OrderID string `gorm:"primary_key"`
+  AssetUUID string `json:"asset_uuid"`
+  Amount string `json:"amount"`
+  CallBack string `json:"call_back"`
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
   var order  Order
@@ -96,6 +104,16 @@ func main() {
             log.Println(err)
         }
     }()
+
+//sqlite db
+    db, err := gorm.Open("sqlite3", config.SqlitePath)
+    if err != nil {
+      panic("failed to connect database")
+    }
+    defer db.Close()
+
+    // Migrate the schema
+    db.AutoMigrate(&OrderDB{})
 
 
     c := make(chan os.Signal, 1)
