@@ -13,10 +13,14 @@ import (
 	  "encoding/json"
     "github.com/gorilla/mux"
     "github.com/wenewzhang/mixin_payment/utils"
+    "github.com/wenewzhang/mixin_payment/config"
 )
 
 type Order struct {
 	OrderID string `json:"order_id"`
+  AssetUUID string `json:"asset_uuid"`
+  Amount string `json:"amount"`
+  CallBack string `json:"call_back"`
 }
 
 
@@ -28,7 +32,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     utils.Respond(w, utils.Message(false, "Invalid request"))
     return
   }
-  utils.Respond(w, utils.Message(false, "hi,rest api"))
+  utils.Respond(w, utils.Message(true, "Order has accepted"))
   return
 }
 
@@ -92,6 +96,7 @@ func main() {
             log.Println(err)
         }
     }()
+
 
     c := make(chan os.Signal, 1)
     // We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
