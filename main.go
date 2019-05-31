@@ -25,7 +25,6 @@ type Order struct {
   CallBack string `json:"call_back"`
 }
 type OrderTbl struct {
-  gorm.Model
 	OrderID string `gorm:"primary_key"`
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
@@ -46,13 +45,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
     panic("failed to connect database")
   }
   defer db.Close()
-  orderDB.OrderID = order.OrderID
-  orderDB.AssetUUID = order.AssetUUID
-  orderDB.Amount = order.Amount
-  orderDB.CallBack = order.CallBack
-  db.Create(&orderDB)
-  utils.Respond(w, utils.Message(true, "Order has accepted"))
-  return
+  fmt.Println(order.OrderID)
+  if db.Where("order_id = ?", order.OrderID).First(&OrderTbl{}).RecordNotFound() {
+    orderDB.OrderID = order.OrderID
+    orderDB.AssetUUID = order.AssetUUID
+    orderDB.Amount = order.Amount
+    orderDB.CallBack = order.CallBack
+    db.Create(&orderDB)
+    utils.Respond(w, utils.Message(true, "Order has been accepted"))
+    return
+  } else {
+    utils.Respond(w, utils.Message(false, "Order been denied, because it has already existed!"))
+    return
+  }
+
 }
 
 func main() {
@@ -125,7 +131,7 @@ func main() {
 
     // Migrate the schema
     db.AutoMigrate(&OrderTbl{})
-
+    // db.Create(&OrderTbl{})
 
     c := make(chan os.Signal, 1)
     // We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)

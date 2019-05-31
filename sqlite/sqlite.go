@@ -7,7 +7,6 @@ import (
 )
 
 type OrderTbl struct {
-  gorm.Model
 	OrderID string `gorm:"primary_key"`
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
