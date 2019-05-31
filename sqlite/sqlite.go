@@ -4,6 +4,7 @@ import (
   "github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
   "fmt"
+  "time"
 )
 
 type OrderTbl struct {
@@ -11,6 +12,8 @@ type OrderTbl struct {
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
   CallBack string `json:"call_back"`
+  CreatedAt time.Time
+  UpdatedAt time.Time
 }
 
 func main() {

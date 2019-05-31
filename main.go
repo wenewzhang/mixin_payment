@@ -29,6 +29,8 @@ type OrderTbl struct {
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
   CallBack string `json:"call_back"`
+  CreatedAt time.Time
+  UpdatedAt time.Time
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
