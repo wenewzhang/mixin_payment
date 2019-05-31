@@ -34,12 +34,23 @@ type OrderDB struct {
 
 func handler(w http.ResponseWriter, r *http.Request) {
   var order  Order
+  var orderDB OrderDB
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
   fmt.Println(order)
   if err != nil {
     utils.Respond(w, utils.Message(false, "Invalid request"))
     return
   }
+  db, err := gorm.Open("sqlite3", config.SqlitePath)
+  if err != nil {
+    panic("failed to connect database")
+  }
+  defer db.Close()
+  orderDB.OrderID = order.OrderID
+  orderDB.AssetUUID = order.AssetUUID
+  orderDB.Amount = order.Amount
+  orderDB.CallBack = order.CallBack
+  db.Create(&orderDB)
   utils.Respond(w, utils.Message(true, "Order has accepted"))
   return
 }
