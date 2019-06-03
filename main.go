@@ -14,6 +14,7 @@ import (
     "github.com/gorilla/mux"
     "github.com/wenewzhang/mixin_payment/utils"
     "github.com/wenewzhang/mixin_payment/config"
+    mixin "github.com/MooooonStar/mixin-sdk-go/network"
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -29,8 +30,33 @@ type OrderTbl struct {
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
   CallBack string `json:"call_back"`
+  Status string
   CreatedAt time.Time
   UpdatedAt time.Time
+}
+
+type AccountTbl struct {
+	OrderID string `gorm:"primary_key"`
+  UserID string
+  SessionID string
+  PinToken string
+  PrivateKey string
+  CreatedAt time.Time
+  UpdatedAt time.Time
+}
+
+// use channel to create wallet,but don't need here!
+// c := make(chan mixin.User)
+// go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
+// user := <- c
+
+func createWallet( userId, sessionId, privateKey string, user chan mixin.User) {
+  new_user,err := mixin.CreateAppUser("mixin payment", "896400", userId,
+                                 sessionId, privateKey)
+  if err != nil {
+    fmt.Println(err)
+  }
+  user <- *new_user
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -54,10 +80,27 @@ func handler(w http.ResponseWriter, r *http.Request) {
     orderDB.Amount = order.Amount
     orderDB.CallBack = order.CallBack
     db.Create(&orderDB)
+
+    // c := make(chan mixin.User)
+    // go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
+    // user := <- c
+    user,err := mixin.CreateAppUser("mixin payment", "896400", config.ClientId,
+                                   config.SessionId, config.PrivateKey)
+    if err != nil {
+        utils.Respond(w, utils.Message(false, "Create account fail, check your config.go!"))
+    }
+    var account AccountTbl
+    account.OrderID = order.OrderID
+    account.UserID = user.UserId
+    account.SessionID = user.SessionId
+    account.PinToken = user.PinToken
+    account.PrivateKey = user.PrivateKey
+    db.Create(&account)
+
     utils.Respond(w, utils.Message(true, "Order has been accepted"))
     return
   } else {
-    utils.Respond(w, utils.Message(false, "Order been denied, because it has already existed!"))
+    utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
     return
   }
 
@@ -74,6 +117,7 @@ func main() {
     r := mux.NewRouter()
     // r.HandleFunc("/", handler)
     r.HandleFunc("/create_order", handler).Methods("POST")
+    r.HandleFunc("/check_order", handler).Methods("GET")
     // r.HandleFunc("/articles", handler).Methods("GET")
     // r.HandleFunc("/articles/{id}", handler).Methods("GET", "PUT")
     // r.HandleFunc("/authors", handler).Queries("surname", "{surname}")
@@ -133,6 +177,7 @@ func main() {
 
     // Migrate the schema
     db.AutoMigrate(&OrderTbl{})
+    db.AutoMigrate(&AccountTbl{})
     // db.Create(&OrderTbl{})
 
     c := make(chan os.Signal, 1)

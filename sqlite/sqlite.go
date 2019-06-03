@@ -16,6 +16,16 @@ type OrderTbl struct {
   UpdatedAt time.Time
 }
 
+type AccountTbl struct {
+	OrderID string `gorm:"primary_key"`
+  UserID string
+  SessionID string
+  PinToken string
+  PrivateKey string
+  CreatedAt time.Time
+  UpdatedAt time.Time
+}
+
 func main() {
   db, err := gorm.Open("sqlite3", "../payment.db")
   if err != nil {
@@ -23,7 +33,10 @@ func main() {
   }
   defer db.Close()
   var users  []OrderTbl
-
-  db.Find(&users) // find product with id 1
+  db.Model(&OrderTbl{}).Find(&users) // find product with id 1
   fmt.Println(users)
+
+  var account  []AccountTbl
+  db.Model(&AccountTbl{}).Find(&account) // find product with id 1
+  fmt.Println(account)
 }
