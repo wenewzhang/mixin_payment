@@ -22,6 +22,7 @@ type AccountTbl struct {
   SessionID string
   PinToken string
   PrivateKey string
+  Status string
   CreatedAt time.Time
   UpdatedAt time.Time
 }

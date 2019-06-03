@@ -41,6 +41,7 @@ type AccountTbl struct {
   SessionID string
   PinToken string
   PrivateKey string
+  Status string
   CreatedAt time.Time
   UpdatedAt time.Time
 }
@@ -74,7 +75,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
   }
   defer db.Close()
   fmt.Println(order.OrderID)
-  if db.Where("order_id = ?", order.OrderID).First(&OrderTbl{}).RecordNotFound() {
+  if db.Model(&OrderTbl{}).Where("order_id = ?", order.OrderID).First(&OrderTbl{}).RecordNotFound() {
     orderDB.OrderID = order.OrderID
     orderDB.AssetUUID = order.AssetUUID
     orderDB.Amount = order.Amount
@@ -95,6 +96,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
     account.SessionID = user.SessionId
     account.PinToken = user.PinToken
     account.PrivateKey = user.PrivateKey
+    account.Status = "pending"
     db.Create(&account)
 
     utils.Respond(w, utils.Message(true, "Order has been accepted"))
