@@ -60,7 +60,7 @@ func createWallet( userId, sessionId, privateKey string, user chan mixin.User) {
   user <- *new_user
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func createHandler(w http.ResponseWriter, r *http.Request) {
   var order  Order
   var orderDB OrderTbl
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
@@ -105,9 +105,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
     return
   }
-
 }
+func checkHandler(w http.ResponseWriter, r *http.Request) {
+  var order  Order
+  err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
+  fmt.Println(order)
+  if err != nil {
+    utils.Respond(w, utils.Message(false, "Invalid request"))
+    return
+  }
+  db, err := gorm.Open("sqlite3", config.SqlitePath)
+  if err != nil {
+    panic("failed to connect database")
+  }
+  defer db.Close()
+  var account  AccountTbl
+  if db.Model(&AccountTbl{}).Where("order_id = ?", order.OrderID).First(&account).RecordNotFound() {
+    utils.Respond(w, utils.Message(false, "Order " + order.OrderID + " not existed!"))
+  } else {
 
+    // db.Model(&AccountTbl{}).Where("order_id = ?", order.OrderID).First(account)
+    fmt.Println(account)
+    utils.Respond(w, utils.Message(true, "Order status is " + account.Status))
+  }
+  return
+}
 func main() {
 
     var wait time.Duration
@@ -118,8 +140,8 @@ func main() {
     // Add your routes as needed
     r := mux.NewRouter()
     // r.HandleFunc("/", handler)
-    r.HandleFunc("/create_order", handler).Methods("POST")
-    r.HandleFunc("/check_order", handler).Methods("GET")
+    r.HandleFunc("/create_order", createHandler).Methods("POST")
+    r.HandleFunc("/check_order", checkHandler).Methods("POST")
     // r.HandleFunc("/articles", handler).Methods("GET")
     // r.HandleFunc("/articles/{id}", handler).Methods("GET", "PUT")
     // r.HandleFunc("/authors", handler).Queries("surname", "{surname}")
