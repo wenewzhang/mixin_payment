@@ -77,7 +77,11 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     panic("failed to connect database")
   }
   defer db.Close()
-  fmt.Println(order.OrderID)
+  fmt.Println(order)
+  if config.Assets[order.AssetUUID] == false {
+    utils.Respond(w, utils.Message(false, "Unknow Asset UUID!"))
+    return
+  }
   if db.Model(&OrderTbl{}).Where("order_id = ?", order.OrderID).First(&OrderTbl{}).RecordNotFound() {
     orderDB.OrderID = order.OrderID
     orderDB.AssetUUID = order.AssetUUID

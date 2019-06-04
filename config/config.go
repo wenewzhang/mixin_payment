@@ -25,3 +25,8 @@ Q04EytqK7grDDS9PsfeXqdUo0D3NMSJ0BYs/kDsqGSc=
 const (
 	SqlitePath = "./payment.db"
 )
+
+var Assets = map[string]bool{
+	"815b0b1a-2764-3736-8faa-42d694fa620a": true,
+	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d": true,
+}
