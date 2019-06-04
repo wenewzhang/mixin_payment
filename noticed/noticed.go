@@ -7,8 +7,14 @@ import (
   _ "github.com/jinzhu/gorm/dialects/sqlite"
   "fmt"
   "time"
+  "encoding/json"
+  "log"
 )
-
+type Opponent struct {
+  Amount string
+  OpponentID string
+  TimeStamp string
+}
 type AccountTbl struct {
 	OrderID string `gorm:"primary_key"`
   UserID string
@@ -16,6 +22,7 @@ type AccountTbl struct {
   PinToken string
   PrivateKey string
   Status string
+  OpponentID string
   CreatedAt time.Time
   UpdatedAt time.Time
 }
@@ -25,15 +32,46 @@ type AccountTbl struct {
 // go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
 // user := <- c
 
-func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey string, last chan string) {
+func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey string, client chan Opponent) {
 
   snapData, err := mixin.NetworkSnapshots(asset, tm, true, 30, userId, sessionId, privateKey)
   if err != nil {
     fmt.Println(err)
   }
-  fmt.Println(snapData)
-  last <- "abc"
+  var snapInfo map[string]interface{}
+  err = json.Unmarshal([]byte(snapData), &snapInfo)
+  if err != nil {
+      log.Fatal(err)
+  }
+  var ctm string
+  var op Opponent
+  for _, v := range (snapInfo["data"].([]interface{})) {
+    if v.(map[string]interface{})["opponent_id"] != nil {
+      op.OpponentID = v.(map[string]interface{})["opponent_id"].(string)
+      op.Amount = v.(map[string]interface{})["amount"].(string)
+    }
+    fmt.Println(v)
+    // fmt.Println(val)
+    ctm = v.(map[string]interface{})["created_at"].(string)
+  }
+  op.TimeStamp = ctm
+  fmt.Println(ctm)
+  client <- op
 }
+
+/*---my snapshots format----*/
+// {"amount"=>"0.00013147", "asset"=>{"asset_id"=>"c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+// "asset_key"=>"c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+//  "chain_id"=>"c6d0c728-2624-429b-8e0d-d9d19b6592fa",
+//  "icon_url"=>"https://images.mixin.one/HvYGJsV5TGeZ-X9Ek3FEQohQZ3fE9LBEBGcOcn4c4BNHovP4fW4YB97Dg5LcXoQ1hUjMEgjbl1DPlKg1TW7kK6XP=s128",
+//  "name"=>"Bitcoin", "symbol"=>"BTC", "type"=>"asset"},
+//  "created_at"=>"2019-05-23T09:48:04.582099Z",
+//  "data"=>"hqFDzQPooVCnNzU2Mi45MaFGqzAuMDAwMDAwMjY0okZBxBDG0McoJiRCm44N2dGbZZL6oVShUqFPxBDEACoH8bFDObzOJcNDiF5S",
+//   "opponent_id"=>"61103d28-3ac2-44a2-ae34-bd956070dab1",
+//   "snapshot_id"=>"dabcad80-4352-4d24-8599-73d374dfaebd", "source"=>"TRANSFER_INITIALIZED",
+//   "trace_id"=>"bdc79adc-f2b3-4eeb-953d-01b476f91322",
+//  "type"=>"snapshot",
+//  "user_id"=>"5e4ad097-21e8-3f6b-98f7-9dc74dd99f77"}
 
 func main() {
   db, err := gorm.Open("sqlite3", "../payment.db")
@@ -50,10 +88,10 @@ func main() {
     fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
     // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
     // fmt.Println(tm)
-    c := make(chan string)
+    c := make(chan Opponent)
     go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
-    last := <- c
-    fmt.Println(last)
+    opponent := <- c
+    fmt.Println(opponent)
     // fmt.Println(tm)
   }
 }
