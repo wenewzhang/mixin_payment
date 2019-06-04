@@ -9,6 +9,7 @@ import (
   "time"
   "encoding/json"
   "log"
+  "strconv"
 )
 type Opponent struct {
   Amount string
@@ -23,10 +24,20 @@ type AccountTbl struct {
   PrivateKey string
   Status string
   OpponentID string
+  Amount string
+  Offset string
   CreatedAt time.Time
   UpdatedAt time.Time
 }
-
+type OrderTbl struct {
+	OrderID string `gorm:"primary_key"`
+  AssetUUID string `json:"asset_uuid"`
+  Amount string `json:"amount"`
+  CallBack string `json:"call_back"`
+  Status string
+  CreatedAt time.Time
+  UpdatedAt time.Time
+}
 // use channel to create wallet,but don't need here!
 // c := make(chan mixin.User)
 // go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
@@ -91,7 +102,31 @@ func main() {
     c := make(chan Opponent)
     go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
     opponent := <- c
-    fmt.Println(opponent)
+    fmt.Println(opponent.TimeStamp)
+    if opponent.OpponentID != "" {
+      var order  OrderTbl
+      if err := db.Model(&OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err != nil { // find product with id 1
+        rAmount, _ := strconv.ParseFloat(order.Amount, 64)
+        tAmount, _ := strconv.ParseFloat(opponent.Amount, 64)
+        if rAmount <= tAmount {
+          db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+            map[string]interface{}{"opponent_id": opponent.OpponentID,
+                                  "amount":opponent.Amount,
+                                  "status":"paid"})
+        } else {
+          db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+            map[string]interface{}{"opponent_id": opponent.OpponentID,
+                                   "amount":opponent.Amount,
+                                   "status":"partial-paid"})
+        }
+      } else
+      {
+        fmt.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
+      }
+    } else {
+      db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+        map[string]interface{}{"Offset": opponent.TimeStamp})
+    }
     // fmt.Println(tm)
   }
 }

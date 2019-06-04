@@ -42,6 +42,9 @@ type AccountTbl struct {
   PinToken string
   PrivateKey string
   Status string
+  OpponentID string
+  Amount string
+  Offset string
   CreatedAt time.Time
   UpdatedAt time.Time
 }
