@@ -97,10 +97,16 @@ func main() {
     // fmt.Println(account)
     // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
     fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
+    fmt.Println(account.Offset)
     // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
     // fmt.Println(tm)
     c := make(chan Opponent)
-    go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
+    if account.Offset == "" {
+      go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
+    } else {
+      tmOffset, _ := time.Parse(time.RFC3339Nano,account.Offset)
+      go readSnapshots("", tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
+    }
     opponent := <- c
     fmt.Println(opponent.TimeStamp)
     if opponent.OpponentID != "" {
