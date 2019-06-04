@@ -45,7 +45,7 @@ type OrderTbl struct {
 
 func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey string, client chan Opponent) {
 
-  snapData, err := mixin.NetworkSnapshots(asset, tm, true, 30, userId, sessionId, privateKey)
+  snapData, err := mixin.NetworkSnapshots(asset, tm, true, 100, userId, sessionId, privateKey)
   if err != nil {
     fmt.Println(err)
   }

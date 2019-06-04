@@ -17,6 +17,7 @@ import (
     mixin "github.com/MooooonStar/mixin-sdk-go/network"
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
+    // uuid "github.com/satori/go.uuid"
 )
 
 type Order struct {
@@ -105,8 +106,14 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     account.PrivateKey = user.PrivateKey
     account.Status = "pending"
     db.Create(&account)
-
-    utils.Respond(w, utils.Message(true, "Order has been accepted"))
+    // payLink := "https://mixin.one/pay?recipient=" +
+    //              user.UserId + "&asset=" + order.AssetUUID +
+    //              "&amount=" + order.Amount + "&trace=" + uuid.Must(uuid.NewV4()).String() +
+    //              "&memo="
+    payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount)
+    fmt.Println(payLink)
+    fmt.Println(user.UserId)
+    utils.Respond(w, utils.MessagePay(true, "Order has been accepted", payLink))
     return
   } else {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
