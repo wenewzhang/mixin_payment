@@ -29,11 +29,25 @@ const (
 	//minutes
 	OrderExpired              = 12
 	// MASTER_UUID      = ""
-	MASTER_UUID               = "0b4f49dc-8fb4-4539-9a89-fb3afc613747" //transfer the coin to master if it setted 
+	MASTER_UUID               = "0b4f49dc-8fb4-4539-9a89-fb3afc613747" //transfer the coin to master if it setted
 )
 
 var Assets = map[string]bool{
 	"815b0b1a-2764-3736-8faa-42d694fa620a": true,
 	"6cfe566e-4aad-470b-8c9a-2fd35b49c68d": true,
 	"965e5c6e-434c-3fa9-b780-c50f43cd955c": true,
+	"2204c1ee-0ea2-4add-bb9a-b3719cfff93a": true,
+	"23dfb5a5-5d7b-48b6-905f-3970e3176e27": true,
+	"27921032-f73e-434e-955f-43d55672ee31": true,
+	"43d61dcd-e413-450d-80b8-101d5e903357": true,
+	"6472e7e3-75fd-48b6-b1dc-28d294ee1476": true,
+	"6770a1e5-6086-44d5-b60f-545f9d9e8ffd": true,
+	"76c802a2-7c88-447f-a93e-c29c9e5dd9c8": true,
+	"990c4c29-57e9-48f6-9819-7d986ea44985": true,
+	"a2c5d22b-62a2-4c13-b3f0-013290dbac60": true,
+	"c6d0c728-2624-429b-8e0d-d9d19b6592fa": true,
+	"c996abc9-d94e-4494-b1cf-2a3fd3ac5714": true,
+	"fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0": true,
+	"c94ac88f-4671-3976-b60a-09064f1811e8": true,
+	"43b645fc-a52c-38a3-8d3b-705e7aaefa15": true,
 }
