@@ -87,9 +87,9 @@ func main() {
       opponent := <- c
       fmt.Println(opponent.TimeStamp)
       if opponent.OpponentID != "" {
-        fmt.Println("Save the paid infomation---------------")
+        fmt.Println("Save the paid infomation---------------" + account.OrderID)
         var order  models.OrderTbl
-        if err := db.Model(&models.OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err != nil { // find product with id 1
+        if err := db.Model(&models.OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err == nil { // find product with id 1
           fmt.Println(order)
           rAmount, _ := strconv.ParseFloat(order.Amount, 64)
           tAmount, _ := strconv.ParseFloat(opponent.Amount, 64)

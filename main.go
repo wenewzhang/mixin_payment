@@ -82,11 +82,11 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     //              user.UserId + "&asset=" + order.AssetUUID +
     //              "&amount=" + order.Amount + "&trace=" + uuid.Must(uuid.NewV4()).String() +
     //              "&memo="
-    payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount)
+    payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount,order.OrderID)
     fmt.Println(payLink)
     fmt.Println(user.UserId)
-    utils.Respond(w, utils.MessagePay(true, "Order has been accepted",
-      base64.RawURLEncoding.EncodeToString([]byte(payLink))) )
+    enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
+    utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
     return
   } else {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
