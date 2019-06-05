@@ -1,7 +1,7 @@
 package main
 
 import (
-  // "github.com/wenewzhang/mixin_payment/config"
+  "github.com/wenewzhang/mixin_payment/config"
   "github.com/wenewzhang/mixin_payment/models"
   mixin "github.com/MooooonStar/mixin-sdk-go/network"
   "github.com/jinzhu/gorm"
@@ -68,12 +68,15 @@ func main() {
   defer db.Close()
 
   var accounts  []models.AccountTbl
+  fmt.Println("run ...")
   for {
+    time.Sleep(config.CheckPendingOrderInterval * time.Second)
     db.Model(&models.AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
     for _, account := range (accounts) {
       // fmt.Println(account)
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
       fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
+      fmt.Println(time.Since(account.CreatedAt))
       fmt.Println(account.Offset)
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
       // fmt.Println(tm)

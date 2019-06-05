@@ -24,6 +24,8 @@ Q04EytqK7grDDS9PsfeXqdUo0D3NMSJ0BYs/kDsqGSc=
 )
 const (
 	SqlitePath = "./payment.db"
+	//check the pending order 
+	CheckPendingOrderInterval = 6
 )
 
 var Assets = map[string]bool{
