@@ -78,7 +78,8 @@ func main() {
       fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
       fmt.Println(time.Since(account.CreatedAt))
       fmt.Println(account.Offset)
-      if ( (config.OrderExpired * 60) < time.Since(account.CreatedAt) ) {
+      // m, _ := time.ParseDuration(time.Since(account.CreatedAt))
+      if ( (config.OrderExpired * 60) < time.Since(account.CreatedAt).Seconds() ) {
         db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
           map[string]interface{}{"status": "expired"})
         continue
