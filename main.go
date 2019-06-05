@@ -11,6 +11,7 @@ import (
     "fmt"
   	"strings"
 	  "encoding/json"
+    "encoding/base64"
     "github.com/gorilla/mux"
     "github.com/wenewzhang/mixin_payment/utils"
     "github.com/wenewzhang/mixin_payment/config"
@@ -84,7 +85,8 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount)
     fmt.Println(payLink)
     fmt.Println(user.UserId)
-    utils.Respond(w, utils.MessagePay(true, "Order has been accepted", payLink))
+    utils.Respond(w, utils.MessagePay(true, "Order has been accepted",
+      base64.RawURLEncoding.EncodeToString([]byte(payLink))) )
     return
   } else {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
