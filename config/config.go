@@ -28,6 +28,8 @@ const (
 	CheckPendingOrderInterval = 6
 	//minutes
 	OrderExpired              = 12
+	// MASTER_UUID      = ""
+	MASTER_UUID               = "0b4f49dc-8fb4-4539-9a89-fb3afc613747" //transfer the coin to master if it setted 
 )
 
 var Assets = map[string]bool{

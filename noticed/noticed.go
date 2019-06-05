@@ -4,6 +4,7 @@ import (
   "github.com/wenewzhang/mixin_payment/config"
   "github.com/wenewzhang/mixin_payment/models"
   mixin "github.com/MooooonStar/mixin-sdk-go/network"
+  uuid "github.com/satori/go.uuid"
   "github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/sqlite"
   "fmt"
@@ -107,6 +108,15 @@ func main() {
               map[string]interface{}{"opponent_id": opponent.OpponentID,
                                     "amount":opponent.Amount,
                                     "status":"paid"})
+            if ( config.MASTER_UUID != "" ) {
+               _, err := mixin.Transfer(config.MASTER_UUID, opponent.Amount, order.AssetUUID,"",
+     				 													uuid.Must(uuid.NewV4()).String(),
+     											 						"896400",account.PinToken,account.UserID,account.SessionID, account.PrivateKey)
+       				 if err != nil {
+       		             log.Fatal(err)
+       		     }
+               log.Println("transfer " + opponent.Amount + " (" + order.AssetUUID + ") to " + config.MASTER_UUID)
+            }
           } else {
             db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
               map[string]interface{}{"opponent_id": opponent.OpponentID,
