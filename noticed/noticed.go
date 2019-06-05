@@ -89,10 +89,10 @@ func main() {
       // fmt.Println(tm)
       c := make(chan models.Opponent)
       if account.Offset == "" {
-        go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
+        go readSnapshots(account.AssetUUID, account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
       } else {
         tmOffset, _ := time.Parse(time.RFC3339Nano,account.Offset)
-        go readSnapshots("", tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
+        go readSnapshots(account.AssetUUID, tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
       }
       opponent := <- c
       fmt.Println(opponent.TimeStamp)

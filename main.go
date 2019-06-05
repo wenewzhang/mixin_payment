@@ -72,6 +72,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     }
     var account models.AccountTbl
     account.OrderID = order.OrderID
+    account.AssetUUID = order.AssetUUID
     account.UserID = user.UserId
     account.SessionID = user.SessionId
     account.PinToken = user.PinToken
