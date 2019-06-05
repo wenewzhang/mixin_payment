@@ -20,7 +20,7 @@ func Respond(w http.ResponseWriter, data map[string] interface{})  {
 	json.NewEncoder(w).Encode(data)
 }
 
-func EncodePayurl(recipient, asset_id, amount string) (string) {
+func EncodePayurl(recipient, asset_id, amount, memo string) (string) {
 	baseUrl, _ := url.Parse("https://mixin.one")
 	baseUrl.Path += "pay"
 	params := url.Values{}
@@ -28,6 +28,7 @@ func EncodePayurl(recipient, asset_id, amount string) (string) {
 	params.Add("asset", asset_id)
 	params.Add("amount", amount)
 	params.Add("trace", uuid.Must(uuid.NewV4()).String())
+	params.Add("memo", memo)
 
 	// Add Query Parameters to the URL
 	baseUrl.RawQuery = params.Encode() // Escape Query Parameters
