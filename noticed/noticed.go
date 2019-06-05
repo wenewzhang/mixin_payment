@@ -2,6 +2,7 @@ package main
 
 import (
   // "github.com/wenewzhang/mixin_payment/config"
+  "github.com/wenewzhang/mixin_payment/models"
   mixin "github.com/MooooonStar/mixin-sdk-go/network"
   "github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -11,39 +12,13 @@ import (
   "log"
   "strconv"
 )
-type Opponent struct {
-  Amount string
-  OpponentID string
-  TimeStamp string
-}
-type AccountTbl struct {
-	OrderID string `gorm:"primary_key"`
-  UserID string
-  SessionID string
-  PinToken string
-  PrivateKey string
-  Status string
-  OpponentID string
-  Amount string
-  Offset string
-  CreatedAt time.Time
-  UpdatedAt time.Time
-}
-type OrderTbl struct {
-	OrderID string `gorm:"primary_key"`
-  AssetUUID string `json:"asset_uuid"`
-  Amount string `json:"amount"`
-  CallBack string `json:"call_back"`
-  Status string
-  CreatedAt time.Time
-  UpdatedAt time.Time
-}
+
 // use channel to create wallet,but don't need here!
 // c := make(chan mixin.User)
 // go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
 // user := <- c
 
-func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey string, client chan Opponent) {
+func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey string, client chan models.Opponent) {
 
   snapData, err := mixin.NetworkSnapshots(asset, tm, true, 100, userId, sessionId, privateKey)
   if err != nil {
@@ -55,13 +30,14 @@ func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey st
       log.Fatal(err)
   }
   var ctm string
-  var op Opponent
+  var op models.Opponent
   for _, v := range (snapInfo["data"].([]interface{})) {
     if v.(map[string]interface{})["opponent_id"] != nil {
+      fmt.Println("OMG,i find it ----------------------------------------")
       op.OpponentID = v.(map[string]interface{})["opponent_id"].(string)
       op.Amount = v.(map[string]interface{})["amount"].(string)
     }
-    fmt.Println(v)
+    // fmt.Println(v)
     // fmt.Println(val)
     ctm = v.(map[string]interface{})["created_at"].(string)
   }
@@ -91,48 +67,53 @@ func main() {
   }
   defer db.Close()
 
-  var accounts  []AccountTbl
-  db.Model(&AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
-  for _, account := range (accounts) {
-    // fmt.Println(account)
-    // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
-    fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
-    fmt.Println(account.Offset)
-    // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
-    // fmt.Println(tm)
-    c := make(chan Opponent)
-    if account.Offset == "" {
-      go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
-    } else {
-      tmOffset, _ := time.Parse(time.RFC3339Nano,account.Offset)
-      go readSnapshots("", tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
-    }
-    opponent := <- c
-    fmt.Println(opponent.TimeStamp)
-    if opponent.OpponentID != "" {
-      var order  OrderTbl
-      if err := db.Model(&OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err != nil { // find product with id 1
-        rAmount, _ := strconv.ParseFloat(order.Amount, 64)
-        tAmount, _ := strconv.ParseFloat(opponent.Amount, 64)
-        if rAmount <= tAmount {
-          db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
-            map[string]interface{}{"opponent_id": opponent.OpponentID,
-                                  "amount":opponent.Amount,
-                                  "status":"paid"})
-        } else {
-          db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
-            map[string]interface{}{"opponent_id": opponent.OpponentID,
-                                   "amount":opponent.Amount,
-                                   "status":"partial-paid"})
-        }
-      } else
-      {
-        fmt.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
+  var accounts  []models.AccountTbl
+  for {
+    db.Model(&models.AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
+    for _, account := range (accounts) {
+      // fmt.Println(account)
+      // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
+      fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
+      fmt.Println(account.Offset)
+      // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
+      // fmt.Println(tm)
+      c := make(chan models.Opponent)
+      if account.Offset == "" {
+        go readSnapshots("", account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
+      } else {
+        tmOffset, _ := time.Parse(time.RFC3339Nano,account.Offset)
+        go readSnapshots("", tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
       }
-    } else {
-      db.Model(&AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
-        map[string]interface{}{"Offset": opponent.TimeStamp})
+      opponent := <- c
+      fmt.Println(opponent.TimeStamp)
+      if opponent.OpponentID != "" {
+        fmt.Println("Save the paid infomation---------------")
+        var order  models.OrderTbl
+        if err := db.Model(&models.OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err != nil { // find product with id 1
+          fmt.Println(order)
+          rAmount, _ := strconv.ParseFloat(order.Amount, 64)
+          tAmount, _ := strconv.ParseFloat(opponent.Amount, 64)
+          if rAmount <= tAmount {
+            db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+              map[string]interface{}{"opponent_id": opponent.OpponentID,
+                                    "amount":opponent.Amount,
+                                    "status":"paid"})
+          } else {
+            db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+              map[string]interface{}{"opponent_id": opponent.OpponentID,
+                                     "amount":opponent.Amount,
+                                     "status":"partial-paid"})
+          }
+        } else
+        {
+          fmt.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
+        }
+      } else {
+        fmt.Println("Save timestamp---------------")
+        db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+          map[string]interface{}{"Offset": opponent.TimeStamp})
+      }
+      // fmt.Println(tm)
     }
-    // fmt.Println(tm)
-  }
+  } //end of forever for statement
 }

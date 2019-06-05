@@ -14,41 +14,12 @@ import (
     "github.com/gorilla/mux"
     "github.com/wenewzhang/mixin_payment/utils"
     "github.com/wenewzhang/mixin_payment/config"
+    "github.com/wenewzhang/mixin_payment/models"
     mixin "github.com/MooooonStar/mixin-sdk-go/network"
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
     // uuid "github.com/satori/go.uuid"
 )
-
-type Order struct {
-	OrderID string `json:"order_id"`
-  AssetUUID string `json:"asset_uuid"`
-  Amount string `json:"amount"`
-  CallBack string `json:"call_back"`
-}
-type OrderTbl struct {
-	OrderID string `gorm:"primary_key"`
-  AssetUUID string `json:"asset_uuid"`
-  Amount string `json:"amount"`
-  CallBack string `json:"call_back"`
-  Status string
-  CreatedAt time.Time
-  UpdatedAt time.Time
-}
-
-type AccountTbl struct {
-	OrderID string `gorm:"primary_key"`
-  UserID string
-  SessionID string
-  PinToken string
-  PrivateKey string
-  Status string
-  OpponentID string
-  Amount string
-  Offset string
-  CreatedAt time.Time
-  UpdatedAt time.Time
-}
 
 // use channel to create wallet,but don't need here!
 // c := make(chan mixin.User)
@@ -65,8 +36,8 @@ func createWallet( userId, sessionId, privateKey string, user chan mixin.User) {
 }
 
 func createHandler(w http.ResponseWriter, r *http.Request) {
-  var order  Order
-  var orderDB OrderTbl
+  var order  models.Order
+  var orderDB models.OrderTbl
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
   fmt.Println(order)
   if err != nil {
@@ -83,7 +54,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     utils.Respond(w, utils.Message(false, "Unknow Asset UUID!"))
     return
   }
-  if db.Model(&OrderTbl{}).Where("order_id = ?", order.OrderID).First(&OrderTbl{}).RecordNotFound() {
+  if db.Model(&models.OrderTbl{}).Where("order_id = ?", order.OrderID).First(&models.OrderTbl{}).RecordNotFound() {
     orderDB.OrderID = order.OrderID
     orderDB.AssetUUID = order.AssetUUID
     orderDB.Amount = order.Amount
@@ -98,7 +69,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         utils.Respond(w, utils.Message(false, "Create account fail, check your config.go!"))
     }
-    var account AccountTbl
+    var account models.AccountTbl
     account.OrderID = order.OrderID
     account.UserID = user.UserId
     account.SessionID = user.SessionId
@@ -121,7 +92,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
   }
 }
 func checkHandler(w http.ResponseWriter, r *http.Request) {
-  var order  Order
+  var order  models.Order
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
   fmt.Println(order)
   if err != nil {
@@ -133,8 +104,8 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
     panic("failed to connect database")
   }
   defer db.Close()
-  var account  AccountTbl
-  if db.Model(&AccountTbl{}).Where("order_id = ?", order.OrderID).First(&account).RecordNotFound() {
+  var account  models.AccountTbl
+  if db.Model(&models.AccountTbl{}).Where("order_id = ?", order.OrderID).First(&account).RecordNotFound() {
     utils.Respond(w, utils.Message(false, "Order " + order.OrderID + " not existed!"))
   } else {
 
@@ -214,8 +185,8 @@ func main() {
     defer db.Close()
 
     // Migrate the schema
-    db.AutoMigrate(&OrderTbl{})
-    db.AutoMigrate(&AccountTbl{})
+    db.AutoMigrate(&models.OrderTbl{})
+    db.AutoMigrate(&models.AccountTbl{})
     // db.Create(&OrderTbl{})
 
     c := make(chan os.Signal, 1)
