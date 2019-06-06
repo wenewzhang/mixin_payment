@@ -34,7 +34,7 @@ func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey st
   var op models.Opponent
   for _, v := range (snapInfo["data"].([]interface{})) {
     if v.(map[string]interface{})["opponent_id"] != nil {
-      fmt.Println("OMG,i find it ----------------------------------------")
+      log.Println("OMG,i find it ----------------------------------------")
       op.OpponentID = v.(map[string]interface{})["opponent_id"].(string)
       op.Amount = v.(map[string]interface{})["amount"].(string)
     }
@@ -47,6 +47,28 @@ func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey st
   client <- op
 }
 
+func readAssetBalance( asset_uuid string,  userId, sessionId, privateKey string, client chan models.Opponent) {
+  var AssetInfo map[string]interface{}
+  AssetInfoBytes, err  := mixin.ReadAsset(asset_uuid,
+                                         userId,sessionId,privateKey)
+  if err != nil { log.Fatal(err) }
+  // fmt.Println(string(AssetInfoBytes))
+  if err := json.Unmarshal(AssetInfoBytes, &AssetInfo); err != nil {
+      log.Fatal(err)
+  }
+  log.Println(AssetInfo["data"])
+  var op models.Opponent
+  if AssetInfo["data"].(map[string]interface{})["balance"].(string) != "0" {
+    op.TimeStamp = time.Now().Format(time.RFC3339Nano)
+    op.OpponentID = "find"
+    op.Amount = AssetInfo["data"].(map[string]interface{})["balance"].(string)
+  } else {
+    op.TimeStamp = time.Now().Format(time.RFC3339Nano)
+    op.OpponentID = ""
+    op.Amount = AssetInfo["data"].(map[string]interface{})["balance"].(string)
+  }
+  client <- op
+}
 /*---my snapshots format----*/
 // {"amount"=>"0.00013147", "asset"=>{"asset_id"=>"c6d0c728-2624-429b-8e0d-d9d19b6592fa",
 // "asset_key"=>"c6d0c728-2624-429b-8e0d-d9d19b6592fa",
@@ -74,26 +96,20 @@ func main() {
     time.Sleep(config.CheckPendingOrderInterval * time.Second)
     db.Model(&models.AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
     for _, account := range (accounts) {
-      // fmt.Println(account)
+      fmt.Println(account)
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
       fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
       fmt.Println(time.Since(account.CreatedAt))
       fmt.Println(account.Offset)
       // m, _ := time.ParseDuration(time.Since(account.CreatedAt))
-      if ( (config.OrderExpired * 60) < time.Since(account.CreatedAt).Seconds() ) {
-        db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
-          map[string]interface{}{"status": "expired"})
-        continue
-      }
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
       // fmt.Println(tm)
       c := make(chan models.Opponent)
-      if account.Offset == "" {
-        go readSnapshots(account.AssetUUID, account.CreatedAt, account.UserID,account.SessionID, account.PrivateKey, c)
-      } else {
-        tmOffset, _ := time.Parse(time.RFC3339Nano,account.Offset)
-        go readSnapshots(account.AssetUUID, tmOffset, account.UserID,account.SessionID, account.PrivateKey, c)
-      }
+      // if account.Offset == "" {
+      //   go readAssetBalance(account.AssetUUID,  account.UserID,account.SessionID, account.PrivateKey, c)
+      // } else {
+      go readAssetBalance(account.AssetUUID,  account.UserID,account.SessionID, account.PrivateKey, c)
+      // }
       opponent := <- c
       fmt.Println(opponent.TimeStamp)
       if opponent.OpponentID != "" {
@@ -128,10 +144,16 @@ func main() {
           fmt.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
         }
       } else {
-        fmt.Println("Save timestamp---------------")
-        db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
-          map[string]interface{}{"Offset": opponent.TimeStamp})
+        if ( (config.OrderExpired * 60) < time.Since(account.CreatedAt).Seconds() ) {
+          db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+            map[string]interface{}{"status": "expired"})
+        }
       }
+      // else {
+      //   fmt.Println("Save timestamp---------------")
+      //   db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
+      //     map[string]interface{}{"Offset": opponent.TimeStamp})
+      // }
       // fmt.Println(tm)
     }
   } //end of forever for statement
