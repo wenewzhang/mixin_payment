@@ -11,13 +11,13 @@ type Order struct {
 	OrderID string `json:"order_id"`
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
-  CallBack string `json:"call_back"`
+  Source string `json:"source"`
 }
 type OrderTbl struct {
 	OrderID string `gorm:"primary_key"`
   AssetUUID string `json:"asset_uuid"`
   Amount string `json:"amount"`
-  CallBack string `json:"call_back"`
+  Source string `json:"source"`
   Status string
   CreatedAt time.Time
   UpdatedAt time.Time

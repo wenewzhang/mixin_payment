@@ -59,7 +59,7 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     orderDB.OrderID = order.OrderID
     orderDB.AssetUUID = order.AssetUUID
     orderDB.Amount = order.Amount
-    orderDB.CallBack = order.CallBack
+    orderDB.Source = order.Source
     db.Create(&orderDB)
 
     // c := make(chan mixin.User)
@@ -83,11 +83,32 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     //              user.UserId + "&asset=" + order.AssetUUID +
     //              "&amount=" + order.Amount + "&trace=" + uuid.Must(uuid.NewV4()).String() +
     //              "&memo="
-    payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount,order.OrderID)
-    fmt.Println(payLink)
-    fmt.Println(user.UserId)
-    enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
-    utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
+    if order.Source == "deposit" {
+      UserInfoBytes, err    := mixin.ReadAsset(order.AssetUUID,
+                                             user.UserId,user.SessionId,user.PrivateKey)
+      if err != nil {
+              log.Fatal(err)
+      }
+      fmt.Println(string(UserInfoBytes))
+      var UserInfoMap map[string]interface{}
+      if err := json.Unmarshal(UserInfoBytes, &UserInfoMap); err != nil {
+          panic(err)
+      }
+      //EOS
+      if ( order.AssetUUID == "6cfe566e-4aad-470b-8c9a-2fd35b49c68d" ) {
+        log.Println(UserInfoMap["data"].(map[string]interface{})["account_name"])
+        log.Println(UserInfoMap["data"].(map[string]interface{})["account_tag"])
+      } else {
+        log.Println(UserInfoMap["data"].(map[string]interface{})["public_key"])
+      }
+      utils.Respond(w, utils.Message(true, "Order has been accepted"))
+    } else {
+      payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount,order.OrderID)
+      fmt.Println(payLink)
+      fmt.Println(user.UserId)
+      enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
+      utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
+    }
     return
   } else {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
