@@ -12,7 +12,7 @@ go run main.go
 api:
 - check_order
 ```bash
-curl -X POST -i 'http://127.0.0.1:8910/check_order' --data '{"order_id":"1211323"}'
+curl -X GET -i 'http://127.0.0.1:8910/check_order' --data '{"order_id":"1211323"}'
 ```
 
 - create_order
@@ -21,7 +21,7 @@ curl -X POST -i 'http://127.0.0.1:8910/create_order' --data '{"order_id":"121132
 
 curl -X POST -i 'http://127.0.0.1:8910/create_order' --data '{"order_id":"1211323","asset_uuid":"965e5c6e-434c-3fa9-b780-c50f43cd955c","amount":"1","call_back":""}'
 
-curl -X POST -i 'http://127.0.0.1:8910/create_order' --data '{"order_id":"1211328","asset_uuid":"23dfb5a5-5d7b-48b6-905f-3970e3176e27","amount":"0.006"}'
+curl -X POST -i 'http://127.0.0.1:8910/create_order' --data '{"order_id":"1211329","asset_uuid":"6cfe566e-4aad-470b-8c9a-2fd35b49c68d","amount":"0.006","source":"deposit"}'
 
 ```
 

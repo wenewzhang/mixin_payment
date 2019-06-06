@@ -150,7 +150,7 @@ func main() {
     r := mux.NewRouter()
     // r.HandleFunc("/", handler)
     r.HandleFunc("/create_order", createHandler).Methods("POST")
-    r.HandleFunc("/check_order", checkHandler).Methods("POST")
+    r.HandleFunc("/check_order", checkHandler).Methods("GET")
     // r.HandleFunc("/articles", handler).Methods("GET")
     // r.HandleFunc("/articles/{id}", handler).Methods("GET", "PUT")
     // r.HandleFunc("/authors", handler).Queries("surname", "{surname}")
