@@ -3,6 +3,7 @@ package main
 import (
   "github.com/wenewzhang/mixin_payment/config"
   "github.com/wenewzhang/mixin_payment/models"
+  // "github.com/wenewzhang/mixin_payment/utils"
   mixin "github.com/MooooonStar/mixin-sdk-go/network"
   uuid "github.com/satori/go.uuid"
   "github.com/jinzhu/gorm"
@@ -93,6 +94,25 @@ func main() {
   var accounts  []models.AccountTbl
   fmt.Println("run ...")
   for {
+    var count int
+    db.Model(&models.AccountTbl{}).Where("status = ?","empty").Count(&count)
+    for count < 10 {
+      user,err := mixin.CreateAppUser("mixin payment", "896400", config.ClientId,
+                                     config.SessionId, config.PrivateKey)
+      if err != nil {
+          log.Fatal("Create account fail, check your config.go!")
+      }
+      var account models.AccountTbl
+      account.OrderID = ""
+      account.AssetUUID = ""
+      account.UserID = user.UserId
+      account.SessionID = user.SessionId
+      account.PinToken = user.PinToken
+      account.PrivateKey = user.PrivateKey
+      account.Status = "empty"
+      db.Create(&account)
+    }
+    //notice
     time.Sleep(config.CheckPendingOrderInterval * time.Second)
     db.Model(&models.AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
     for _, account := range (accounts) {
