@@ -151,7 +151,7 @@ func main() {
                                      "status":"partial-paid"})
           }
           if ( config.MASTER_UUID != "" ) {
-             _, err := mixin.Transfer(config.MASTER_UUID, opponent.Amount, order.AssetUUID,"",
+             _, err := mixin.Transfer(config.MASTER_UUID, opponent.Amount, order.AssetUUID, order.OrderID,
                                     uuid.Must(uuid.NewV4()).String(),
                                     "896400",account.PinToken,account.UserID,account.SessionID, account.PrivateKey)
              if err != nil {

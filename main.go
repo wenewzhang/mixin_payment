@@ -61,56 +61,48 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
     orderDB.Amount = order.Amount
     orderDB.Source = order.Source
     db.Create(&orderDB)
-
-    // c := make(chan mixin.User)
-    // go createWallet(config.ClientId,config.SessionId, config.PrivateKey, c)
-    // user := <- c
-    user,err := mixin.CreateAppUser("mixin payment", "896400", config.ClientId,
-                                   config.SessionId, config.PrivateKey)
-    if err != nil {
-        utils.Respond(w, utils.Message(false, "Create account fail, check your config.go!"))
-    }
     var account models.AccountTbl
-    account.OrderID = order.OrderID
-    account.AssetUUID = order.AssetUUID
-    account.UserID = user.UserId
-    account.SessionID = user.SessionId
-    account.PinToken = user.PinToken
-    account.PrivateKey = user.PrivateKey
-    account.Status = "pending"
-    db.Create(&account)
-    // payLink := "https://mixin.one/pay?recipient=" +
-    //              user.UserId + "&asset=" + order.AssetUUID +
-    //              "&amount=" + order.Amount + "&trace=" + uuid.Must(uuid.NewV4()).String() +
-    //              "&memo="
-    if order.Source == "deposit" {
-      UserInfoBytes, err    := mixin.ReadAsset(order.AssetUUID,
-                                             user.UserId,user.SessionId,user.PrivateKey)
-      if err != nil {
-              log.Fatal(err)
-      }
-      fmt.Println(string(UserInfoBytes))
-      var UserInfoMap map[string]interface{}
-      if err := json.Unmarshal(UserInfoBytes, &UserInfoMap); err != nil {
-          panic(err)
-      }
-      //EOS
-      if ( order.AssetUUID == "6cfe566e-4aad-470b-8c9a-2fd35b49c68d" ) {
-        log.Println(UserInfoMap["data"].(map[string]interface{})["account_name"])
-        log.Println(UserInfoMap["data"].(map[string]interface{})["account_tag"])
-      } else {
-        log.Println(UserInfoMap["data"].(map[string]interface{})["public_key"])
-      }
-      utils.Respond(w, utils.Message(true, "Order has been accepted"))
+    if db.Model(&models.AccountTbl{}).Where("status = ?","empty").First(&account).RecordNotFound() {
+      log.Fatal("Please run noticed first!")
+      utils.Respond(w, utils.Message(false, "The noticed service won't ready yet!"))
     } else {
-      payLink := utils.EncodePayurl(user.UserId, order.AssetUUID, order.Amount,order.OrderID)
-      fmt.Println(payLink)
-      fmt.Println(user.UserId)
-      enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
-      utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
+      account.OrderID = order.OrderID
+      account.AssetUUID = order.AssetUUID
+      account.Status = "pending"
+      db.Save(&account)
+      // payLink := "https://mixin.one/pay?recipient=" +
+      //              user.UserId + "&asset=" + order.AssetUUID +
+      //              "&amount=" + order.Amount + "&trace=" + uuid.Must(uuid.NewV4()).String() +
+      //              "&memo="
+      if order.Source == "deposit" {
+        UserInfoBytes, err    := mixin.ReadAsset(order.AssetUUID,
+                                               account.UserID,account.SessionID,account.PrivateKey)
+        if err != nil {
+                log.Fatal(err)
+        }
+        fmt.Println(string(UserInfoBytes))
+        var UserInfoMap map[string]interface{}
+        if err := json.Unmarshal(UserInfoBytes, &UserInfoMap); err != nil {
+            panic(err)
+        }
+        //EOS
+        if ( order.AssetUUID == "6cfe566e-4aad-470b-8c9a-2fd35b49c68d" ) {
+          log.Println(UserInfoMap["data"].(map[string]interface{})["account_name"])
+          log.Println(UserInfoMap["data"].(map[string]interface{})["account_tag"])
+        } else {
+          log.Println(UserInfoMap["data"].(map[string]interface{})["public_key"])
+        }
+        utils.Respond(w, utils.Message(true, "Order has been accepted"))
+      } else {
+        payLink := utils.EncodePayurl(account.UserID, order.AssetUUID, order.Amount,order.OrderID)
+        fmt.Println(payLink)
+        // fmt.Println(user.UserId)
+        enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
+        utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
+      }
+      return
     }
-    return
-  } else {
+    } else {
     utils.Respond(w, utils.Message(false, "Order has been denied, because it was existed!"))
     return
   }
