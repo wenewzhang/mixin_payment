@@ -89,13 +89,12 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
         if ( order.AssetUUID == "6cfe566e-4aad-470b-8c9a-2fd35b49c68d" ) {
           log.Println(UserInfoMap["data"].(map[string]interface{})["account_name"])
           log.Println(UserInfoMap["data"].(map[string]interface{})["account_tag"])
-          Winfo := EncodeWalletInfo(UserInfoMap["data"].(map[string]interface{})["account_name"],
-                          UserInfoMap["data"].(map[string]interface{})["account_tag"]
-                          )
-          utils.Respond(w, utils.MessagePay(true, "Order has been accepted",Winfo))  
+          Winfo := utils.EncodeWalletInfo(UserInfoMap["data"].(map[string]interface{})["account_name"].(string),
+                                          UserInfoMap["data"].(map[string]interface{})["account_tag"].(string))
+          utils.Respond(w, utils.MessagePay(true, "Order has been accepted",Winfo))
         } else {
           log.Println(UserInfoMap["data"].(map[string]interface{})["public_key"])
-          Winfo := EncodeWalletInfo(UserInfoMap["data"].(map[string]interface{})["public_key"],
+          Winfo := utils.EncodeWalletInfo(UserInfoMap["data"].(map[string]interface{})["public_key"].(string),
                           "")
           utils.Respond(w, utils.MessagePay(true, "Order has been accepted",Winfo))
         }

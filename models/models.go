@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-  "github.com/wenewzhang/mixin_payment/models"
 )
 // Model base model definition, including fields `ID`, `CreatedAt`, `UpdatedAt`, `DeletedAt`, which could be embedded in your models
 //    type User struct {
