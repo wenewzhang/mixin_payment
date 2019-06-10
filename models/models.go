@@ -24,9 +24,9 @@ type OrderTbl struct {
 }
 
 type AccountTbl struct {
-	OrderID string `gorm:"primary_key"`
+	OrderID string `gorm:"INDEX"`
 	AssetUUID string `json:"asset_uuid"`
-  UserID string
+  UserID string `gorm:"primary_key"`
   SessionID string
   PinToken string
   PrivateKey string
