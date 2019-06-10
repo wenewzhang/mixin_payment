@@ -12,7 +12,7 @@ func Message(status bool, message string) (map[string]interface{}) {
 }
 
 func MessagePay(status bool, message, payurl string) (map[string]interface{}) {
-	return map[string]interface{} { "status" : status, "message" : message, "payurl": payurl }
+	return map[string]interface{} { "status" : status, "message" : message, "pay": payurl }
 }
 
 func Respond(w http.ResponseWriter, data map[string] interface{})  {
@@ -33,4 +33,14 @@ func EncodePayurl(recipient, asset_id, amount, memo string) (string) {
 	// Add Query Parameters to the URL
 	baseUrl.RawQuery = params.Encode() // Escape Query Parameters
   return baseUrl.String()
+}
+
+func EncodeWalletInfo(public_key, tag string) (string) {
+	memoOcean,_ :=
+		msgpack.Marshal(models.WalletInfo{
+			P: public_key,
+			T: tag,
+		})
+	memoOceanB64 := base64.StdEncoding.EncodeToString(memoOcean)
+	return memoOceanB64
 }

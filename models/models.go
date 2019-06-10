@@ -1,7 +1,9 @@
 package models
 
-import "time"
-
+import (
+	"time"
+  "github.com/wenewzhang/mixin_payment/models"
+)
 // Model base model definition, including fields `ID`, `CreatedAt`, `UpdatedAt`, `DeletedAt`, which could be embedded in your models
 //    type User struct {
 //      gorm.Model
@@ -42,4 +44,9 @@ type Opponent struct {
   Amount string
   OpponentID string
   TimeStamp string
+}
+
+type WalletInfo struct {
+  P string
+  T string
 }
