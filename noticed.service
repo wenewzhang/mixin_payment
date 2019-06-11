@@ -1,0 +1,15 @@
+[Unit]
+Description= Notification for mixin payment
+After=network.target
+
+[Service]
+;EnvironmentFile=-/etc/default/my-application
+ExecStart=/root/go/src/github.com/wenewzhang/mixin_payment/noticed/noticed
+WorkingDirectory=/root/go/src/github.com/wenewzhang/mixin_payment/noticed
+LimitNOFILE=4096
+IgnoreSIGPIPE=false
+KillMode=process
+User=root
+
+[Install]
+WantedBy=multi-user.target

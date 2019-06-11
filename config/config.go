@@ -25,9 +25,9 @@ Q04EytqK7grDDS9PsfeXqdUo0D3NMSJ0BYs/kDsqGSc=
 const (
 	SqlitePath = "./payment.db"
 	//check the pending order second
-	CheckPendingOrderInterval = 6
+	CheckPendingOrderInterval = 5
 	//minutes
-	OrderExpired              = 12
+	OrderExpired              = 30
 	// MASTER_UUID      = ""
 	MASTER_UUID               = "0b4f49dc-8fb4-4539-9a89-fb3afc613747" //transfer the coin to master if it setted
 )
