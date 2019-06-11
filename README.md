@@ -30,7 +30,7 @@ install in ubuntu 16.04 LTS:
 ```bash
 sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get install g++
+sudo apt-get install g++ make
 wget https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz
 sudo tar -xvf go1.12.5.linux-amd64.tar.gz
 sudo mv go /usr/local

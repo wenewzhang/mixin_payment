@@ -8,8 +8,7 @@ import (
     "os"
     "os/signal"
     "time"
-    "fmt"
-  	"strings"
+    "strings"
 	  "encoding/json"
     "encoding/base64"
     "github.com/gorilla/mux"
@@ -31,7 +30,7 @@ func createWallet( userId, sessionId, privateKey string, user chan mixin.User) {
   new_user,err := mixin.CreateAppUser("mixin payment", "896400", userId,
                                  sessionId, privateKey)
   if err != nil {
-    fmt.Println(err)
+    log.Println(err)
   }
   user <- *new_user
 }
@@ -40,17 +39,17 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
   var order  models.Order
   var orderDB models.OrderTbl
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
-  fmt.Println(order)
+  log.Println(order)
   if err != nil {
     utils.Respond(w, utils.Message(false, "Invalid request"))
     return
   }
   db, err := gorm.Open("sqlite3", config.SqlitePath)
   if err != nil {
-    panic("failed to connect database")
+    log.Fatal("failed to connect database")
   }
   defer db.Close()
-  fmt.Println(order)
+  log.Println(order)
   if config.Assets[order.AssetUUID] == false {
     utils.Respond(w, utils.Message(false, "Unknow Asset UUID!"))
     return
@@ -80,10 +79,10 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 log.Fatal(err)
         }
-        fmt.Println(string(UserInfoBytes))
+        log.Println(string(UserInfoBytes))
         var UserInfoMap map[string]interface{}
         if err := json.Unmarshal(UserInfoBytes, &UserInfoMap); err != nil {
-            panic(err)
+            log.Fatal(err)
         }
         //EOS
         if ( order.AssetUUID == "6cfe566e-4aad-470b-8c9a-2fd35b49c68d" ) {
@@ -101,8 +100,8 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 
       } else {
         payLink := utils.EncodePayurl(account.UserID, order.AssetUUID, order.Amount,order.OrderID)
-        fmt.Println(payLink)
-        // fmt.Println(user.UserId)
+        log.Println(payLink)
+        // log.Println(user.UserId)
         enUrl := base64.RawURLEncoding.EncodeToString([]byte(payLink))
         utils.Respond(w, utils.MessagePay(true, "Order has been accepted",enUrl))
       }
@@ -116,14 +115,14 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 func checkHandler(w http.ResponseWriter, r *http.Request) {
   var order  models.Order
   err := json.NewDecoder(r.Body).Decode(&order) //decode the request body into struct and failed if any error occur
-  fmt.Println(order)
+  log.Println(order)
   if err != nil {
     utils.Respond(w, utils.Message(false, "Invalid request"))
     return
   }
   db, err := gorm.Open("sqlite3", config.SqlitePath)
   if err != nil {
-    panic("failed to connect database")
+    log.Fatal("failed to connect database")
   }
   defer db.Close()
   var account  models.AccountTbl
@@ -132,7 +131,7 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
   } else {
 
     // db.Model(&AccountTbl{}).Where("order_id = ?", order.OrderID).First(account)
-    fmt.Println(account)
+    log.Println(account)
     utils.Respond(w, utils.Message(true, "Order status is " + account.Status))
   }
   return
@@ -155,30 +154,30 @@ func main() {
     err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
       pathTemplate, err := route.GetPathTemplate()
       if err == nil {
-        fmt.Println("ROUTE:", pathTemplate)
+        log.Println("ROUTE:", pathTemplate)
       }
       pathRegexp, err := route.GetPathRegexp()
       if err == nil {
-        fmt.Println("Path regexp:", pathRegexp)
+        log.Println("Path regexp:", pathRegexp)
       }
       queriesTemplates, err := route.GetQueriesTemplates()
       if err == nil {
-        fmt.Println("Queries templates:", strings.Join(queriesTemplates, ","))
+        log.Println("Queries templates:", strings.Join(queriesTemplates, ","))
       }
       queriesRegexps, err := route.GetQueriesRegexp()
       if err == nil {
-        fmt.Println("Queries regexps:", strings.Join(queriesRegexps, ","))
+        log.Println("Queries regexps:", strings.Join(queriesRegexps, ","))
       }
       methods, err := route.GetMethods()
       if err == nil {
-        fmt.Println("Methods:", strings.Join(methods, ","))
+        log.Println("Methods:", strings.Join(methods, ","))
       }
-      fmt.Println()
+      log.Println()
       return nil
     })
 
     if err != nil {
-      fmt.Println(err)
+      log.Println(err)
     }
 
     http.Handle("/", r)
@@ -202,7 +201,7 @@ func main() {
 //sqlite db
     db, err := gorm.Open("sqlite3", config.SqlitePath)
     if err != nil {
-      panic("failed to connect database")
+      log.Fatal("failed to connect database")
     }
     defer db.Close()
 

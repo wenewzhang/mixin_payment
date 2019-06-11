@@ -8,7 +8,6 @@ import (
   uuid "github.com/satori/go.uuid"
   "github.com/jinzhu/gorm"
   _ "github.com/jinzhu/gorm/dialects/sqlite"
-  "fmt"
   "time"
   "encoding/json"
   "log"
@@ -24,7 +23,7 @@ func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey st
 
   snapData, err := mixin.NetworkSnapshots(asset, tm, true, 100, userId, sessionId, privateKey)
   if err != nil {
-    fmt.Println(err)
+    log.Println(err)
   }
   var snapInfo map[string]interface{}
   err = json.Unmarshal([]byte(snapData), &snapInfo)
@@ -39,12 +38,12 @@ func readSnapshots( asset string, tm time.Time, userId, sessionId, privateKey st
       op.OpponentID = v.(map[string]interface{})["opponent_id"].(string)
       op.Amount = v.(map[string]interface{})["amount"].(string)
     }
-    // fmt.Println(v)
-    // fmt.Println(val)
+    // log.Println(v)
+    // log.Println(val)
     ctm = v.(map[string]interface{})["created_at"].(string)
   }
   op.TimeStamp = ctm
-  fmt.Println(ctm)
+  log.Println(ctm)
   client <- op
 }
 
@@ -53,7 +52,7 @@ func readAssetBalance( asset_uuid string,  userId, sessionId, privateKey string,
   AssetInfoBytes, err  := mixin.ReadAsset(asset_uuid,
                                          userId,sessionId,privateKey)
   if err != nil { log.Fatal(err) }
-  // fmt.Println(string(AssetInfoBytes))
+  // log.Println(string(AssetInfoBytes))
   if err := json.Unmarshal(AssetInfoBytes, &AssetInfo); err != nil {
       log.Fatal(err)
   }
@@ -87,12 +86,12 @@ func readAssetBalance( asset_uuid string,  userId, sessionId, privateKey string,
 func main() {
   db, err := gorm.Open("sqlite3", "../payment.db")
   if err != nil {
-    panic("failed to connect database")
+    log.Fatal("failed to connect database")
   }
   defer db.Close()
 
   var accounts  []models.AccountTbl
-  fmt.Println("run ...")
+  log.Println("run ...")
   for {
     var count int
     db.Model(&models.AccountTbl{}).Where("status = ?","empty").Count(&count)
@@ -116,14 +115,14 @@ func main() {
     time.Sleep(config.CheckPendingOrderInterval * time.Second)
     db.Model(&models.AccountTbl{}).Where("status = ?","pending").Find(&accounts) // find product with id 1
     for _, account := range (accounts) {
-      fmt.Println(account)
+      log.Println(account)
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.String())
-      fmt.Println(account.CreatedAt.Format(time.RFC3339Nano))
-      fmt.Println(time.Since(account.CreatedAt))
-      fmt.Println(account.Offset)
+      log.Println(account.CreatedAt.Format(time.RFC3339Nano))
+      log.Println(time.Since(account.CreatedAt))
+      log.Println(account.Offset)
       // m, _ := time.ParseDuration(time.Since(account.CreatedAt))
       // tm, _:= time.Parse(time.RFC3339Nano,account.CreatedAt.Format(time.RFC3339Nano))
-      // fmt.Println(tm)
+      // log.Println(tm)
       c := make(chan models.Opponent)
       // if account.Offset == "" {
       //   go readAssetBalance(account.AssetUUID,  account.UserID,account.SessionID, account.PrivateKey, c)
@@ -131,12 +130,12 @@ func main() {
       go readAssetBalance(account.AssetUUID,  account.UserID,account.SessionID, account.PrivateKey, c)
       // }
       opponent := <- c
-      fmt.Println(opponent.TimeStamp)
+      log.Println(opponent.TimeStamp)
       if opponent.OpponentID != "" {
-        fmt.Println("Save the paid infomation---------------" + account.OrderID)
+        log.Println("Save the paid infomation---------------" + account.OrderID)
         var order  models.OrderTbl
         if err := db.Model(&models.OrderTbl{}).Where("order_id = ?",account.OrderID).First(&order).Error;err == nil { // find product with id 1
-          fmt.Println(order)
+          log.Println(order)
           rAmount, _ := strconv.ParseFloat(order.Amount, 64)
           tAmount, _ := strconv.ParseFloat(opponent.Amount, 64)
           if rAmount <= tAmount {
@@ -161,7 +160,7 @@ func main() {
           }
         } else
         {
-          fmt.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
+          log.Println("Can not find the order " + account.OrderID + " in table order_tbls!")
         }
       } else {
         if ( (config.OrderExpired * 60) < time.Since(account.CreatedAt).Seconds() ) {
@@ -170,11 +169,11 @@ func main() {
         }
       }
       // else {
-      //   fmt.Println("Save timestamp---------------")
+      //   log.Println("Save timestamp---------------")
       //   db.Model(&models.AccountTbl{}).Where("order_id = ?", account.OrderID).Updates(
       //     map[string]interface{}{"Offset": opponent.TimeStamp})
       // }
-      // fmt.Println(tm)
+      // log.Println(tm)
     }
   } //end of forever for statement
 }
