@@ -44,8 +44,3 @@ type Opponent struct {
   OpponentID string
   TimeStamp string
 }
-
-type WalletInfo struct {
-  P string
-  T string
-}

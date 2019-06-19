@@ -50,3 +50,14 @@ cd ../
 make
 ./mixin_payment &
 ```
+
+install as system service
+
+```bash
+cp mixin_paymet.service /lib/systemd/system/.
+cp noticed.service /lib/systemd/system/.
+systemctl enable mixin_payment
+systemctl start mixin_payment
+systemctl enable noticed
+systemctl start noticed
+```

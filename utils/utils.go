@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"github.com/wenewzhang/mixin_payment/models"
 	uuid "github.com/satori/go.uuid"
 	"encoding/base64"
-	"github.com/vmihailenco/msgpack"
 )
 
 func Message(status bool, message string) (map[string]interface{}) {
@@ -39,11 +37,11 @@ func EncodePayurl(recipient, asset_id, amount, memo string) (string) {
 }
 
 func EncodeWalletInfo(public_key, tag string) (string) {
-	memoOcean,_ :=
-		msgpack.Marshal(models.WalletInfo{
-			P: public_key,
-			T: tag,
-		})
-	memoOceanB64 := base64.StdEncoding.EncodeToString(memoOcean)
+	// memoOcean,_ :=
+	// 	msgpack.Marshal(models.WalletInfo{
+	// 		P: public_key,
+	// 		T: tag,
+	// 	})
+	memoOceanB64 := base64.StdEncoding.EncodeToString([]byte(public_key + " " + tag))
 	return memoOceanB64
 }
